@@ -14,12 +14,16 @@ import {
 } from "@material-ui/core";
 import Pagination from "@material-ui/lab/Pagination";
 
-import styles from "../styles/Home.module.css";
+import styles from "../../styles/Home.module.css";
 
-export default function Index({ products, total }) {
+export default function Index({ products, total, page }) {
   const router = useRouter();
   const handleChange = (e, val) => {
-    router.push(`/products/${val}/5`);
+    if (+val === 1) {
+      router.push("/");
+    } else {
+      router.push(`/products/${val}`);
+    }
   };
   return (
     <div className={styles.container}>
@@ -30,7 +34,7 @@ export default function Index({ products, total }) {
 
       <Pagination
         count={total}
-        page={1}
+        page={page}
         showFirstButton
         showLastButton
         onChange={handleChange}
@@ -45,7 +49,15 @@ export default function Index({ products, total }) {
         alignItems="center"
       >
         {products.map((product, index) => (
-          <Grid style={{margin:'0px'}} key={product._id} item xs={12} sm={6} md={3} lg={4}>
+          <Grid
+            style={{ margin: "0px" }}
+            key={product._id}
+            item
+            xs={12}
+            sm={6}
+            md={3}
+            lg={4}
+          >
             <Card variant="outlined">
               {/* <Link href={`/product/${product.fields.title}`}> */}
               <CardActionArea>
@@ -91,15 +103,24 @@ export default function Index({ products, total }) {
   );
 }
 
-export const getStaticProps = async () => {
+export const getStaticProps = async ({ params }) => {
   const res = await axios.get(
-    "http://localhost:3000/api/products?page=1&limit=2"
+    `http://localhost:3000/api/products?page=${+params.page[0]}&limit=${+params
+      .page[1]}`
   );
-  console.log("pro", res.data);
+    console.log("pro", res.data);
   return {
     props: {
       products: res.data.products,
       total: res.data.paginationInfo.totalPage,
+      page: +params.page[0],
     },
+  };
+};
+
+export const getStaticPaths = async () => {
+  return {
+    paths: [{ params: { page: ["2", "5"] } }, { params: { page: ["3", "2"] } }],
+    fallback: true,
   };
 };
